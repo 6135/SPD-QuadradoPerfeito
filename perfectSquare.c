@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <limits.h>
 #include <pthread.h>
+#include <time.h>
+
 
 #define AND &&
 #define and AND
@@ -35,18 +37,20 @@ typedef struct {
 } magicSquare;
 
 magicSquare MagicSquare(int **array, int array_size){
+    int sqrN = sqrt(array_size);
     magicSquare result;
     result.cols_sum = 0;
     result.lines_sum = 0;
     result.diag_sum = 0;
-    result.side_size = sqrt(array_size);
+    result.side_size = sqrN;
     result.array_size = array_size;
 
-    result.array = malloc(result.side_size*sizeof(int));
-    for (int i = 0; i < result.side_size; i++)
-        result.array[i] = malloc(result.side_size*sizeof(int));
-    for (size_t i = 0; i < result.side_size; i++)
-        memcpy(result.array,array,sizeof(int)*array_size);
+    result.array = (int**)malloc(sqrN*sizeof(int*));
+    for (int i = 0; i < sqrN; i++)
+        result.array[i] =(int*) malloc(sqrN*sizeof(int));
+        
+    for (size_t i = 0; i < sqrN; i++)
+        memcpy(result.array[i],array[i],sizeof(int)*sqrN);
 
     return result;
 
@@ -129,14 +133,19 @@ void perfect_square_sequential(const char* file_path){
     // printf("Number of elements: %d\n", size_array);
 
     int sqrN = sqrt(size_array);
-    int **array = malloc(sqrN*sizeof(int));
-    for (int i = 0; i < sqrN; i++)
-        array[i] = malloc(sqrN*sizeof(int)); //allocate array
+    int **array = (int **)malloc(sqrN * sizeof(int *)); 
+    for (int i=0; i<sqrN; i++) 
+         array[i] = (int *)malloc(sqrN * sizeof(int)); 
 
     // printf("File read\n");
     fp = fopen(file_path,"r");
     array_fill(fp,size_array,sqrN,array);
-
+    /**
+     * start counting time 
+     */
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
     //line 1
     // printf("Checking rules...\n");
     int check_all_lines = check_all_lines_equals(array,sqrN);
@@ -154,7 +163,12 @@ void perfect_square_sequential(const char* file_path){
     else if(matches is 1)
         printf("Quadrado magico imperfeito\n");
     else if(matches is 0) printf("Nao e quadrado magico\n");
-
+    /**
+     * Stop counting
+     */
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Took %f seconds to execute \n", cpu_time_used); 
     //close
     fclose(fp);
     for(int i = 0; i < sqrN; i++)
@@ -166,10 +180,8 @@ void perfect_square_sequential(const char* file_path){
 void* check_all_lines_equals_seq(void* param){
     magicSquare *magic_square = (magicSquare *) param;
     int sum_first_line = sum_line(magic_square->array[0],magic_square->side_size);
-    printf("firstLine %d, numLines: %d\n",sum_first_line,magic_square->side_size);
     for (int i = 1; i < magic_square->side_size; i++){
-        printf("%d ",i);
-        if( sum_line(magic_square->array[i],magic_square->side_size) isnot sum_first_line ) {
+        if( (sum_line(magic_square->array[i],magic_square->side_size)) isnot sum_first_line ) {
             magic_square->lines_sum = INT_MIN;
             pthread_exit(NULL);
         }
@@ -208,26 +220,37 @@ void perfect_square_threaded(const char* file_path){
     int size_array = array_size_count(fp); //count size
 
     int sqrN = sqrt(size_array);
-    int **array = malloc(sqrN*sizeof(int));
-    for (int i = 0; i < sqrN; i++)
-        array[i] = malloc(sqrN*sizeof(int)); //allocate array
+    int **array = (int **)malloc(sqrN * sizeof(int *)); 
+    for (int i=0; i<sqrN; i++) 
+         array[i] = (int *)malloc(sqrN * sizeof(int)); 
+
 
     fp = fopen(file_path,"r");
     array_fill(fp,size_array,sqrN,array);
 
+    // printf("testArray: %d\n",array[86][99]);
+
     magicSquare magic_square = MagicSquare(array,size_array);
 
     pthread_t tid[3];
-    pthread_create(&tid[0],NULL,check_all_lines_equals_seq,(void*)&magic_square);
-    pthread_create(&tid[1],NULL,check_all_columns_equals_seq,(void*)&magic_square);
-    pthread_create(&tid[2],NULL,check_all_diags_equals_seq,(void *)&magic_square);
+    int thread_num = 0;
+
+    /**
+     * start counting time 
+     */
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+    // printf("testStruct: %d\n",magic_square.array[86][99]);
+    pthread_create(&tid[thread_num++],NULL,check_all_lines_equals_seq,(void*)&magic_square);
+    pthread_create(&tid[thread_num++],NULL,check_all_columns_equals_seq,(void*)&magic_square);
+    pthread_create(&tid[thread_num++],NULL,check_all_diags_equals_seq,(void *)&magic_square);
     
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < thread_num; i++){
         pthread_join(tid[i],NULL);
-        printf("threadNu: %d\n", i);
+        // printf("threadNu: %d\n", i);
     }
         
-    
     printf("Lines: %d\n",magic_square.lines_sum);
     printf("Columns: %d\n",magic_square.cols_sum);
     printf("Diags: %d\n",magic_square.diag_sum);
@@ -240,15 +263,19 @@ void perfect_square_threaded(const char* file_path){
     else if(matches is 1)
         printf("Quadrado magico imperfeito\n");
     else if(matches is 0) printf("Nao e quadrado magico\n");
-
-    //close
+    /**
+     * Stop counting
+     */
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Took %f seconds to execute \n", cpu_time_used); 
+    // //close
     fclose(fp);
-    for(int i = 0; i < sqrN; i++)
-        free(array[i]);
+    for(int i = 0; i < sqrN; i++) free(array[i]);
     free(array);
 
 }
 int main(){
-    perfect_square_threaded("input3.txt");
+    perfect_square_sequential("input6.txt");
 
 }
