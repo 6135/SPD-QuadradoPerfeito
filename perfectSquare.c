@@ -139,7 +139,7 @@ long long check_all_diags_equals(int **array, int size){
     else return LLONG_MIN;
 }
 
-int any_equals(int* args, int size,int exception){
+int any_equals(int* args, int size,long long exception){
     int num_matches = 0;
     for (int i = 0; i < size; i++) {
         int arg = args[i];
@@ -152,7 +152,14 @@ int any_equals(int* args, int size,int exception){
     
 }
 
-void perfect_square_sequential(const char* file_path){
+void perfect_square_sequential(const char* file_path){ 
+    /**
+     * start counting time 
+     */
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+    //*******************//
     printf("Sequential\n");
     FILE *fp;
     fp = fopen(file_path,"r");
@@ -167,23 +174,19 @@ void perfect_square_sequential(const char* file_path){
     // printf("File read\n");
     fp = fopen(file_path,"r");
     array_fill(fp,size_array,sqrN,array);
-    /**
-     * start counting time 
-     */
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
+    magicSquare magic_square = MagicSquare(array,size_array);
+
     //line 1
     // printf("Checking rules...\n");
-    long long check_all_lines = check_all_lines_equals(array,sqrN);
+    long long check_all_lines = check_all_lines_equals(magic_square.array,sqrN);
     printf("Line Sum: %lld\n",check_all_lines);
-    long long check_all_columns = check_all_columns_equals(array,sqrN);
+    long long check_all_columns = check_all_columns_equals(magic_square.array,sqrN);
     printf("Column Sum: %lld\n",check_all_columns);
-    long long check_all_diags = check_all_diags_equals(array,sqrN);
+    long long check_all_diags = check_all_diags_equals(magic_square.array,sqrN);
     printf("Diag Sum: %lld\n",check_all_diags);
     int rules[3] = {check_all_lines, check_all_columns,check_all_diags};
     
-    int matches=any_equals(rules,3,INT_MIN);
+    int matches=any_equals(rules,3,LLONG_MIN);
     
     if(matches is 3)
         printf("Quadrado magico\n");
@@ -204,7 +207,7 @@ void perfect_square_sequential(const char* file_path){
 
 }
 
-void* check_all_lines_equals_seq(void* param){
+void* check_all_lines_equals_threaded(void* param){
     magicSquare *magic_square = (magicSquare *) param;
     long long sum_first_line = sum_line(magic_square->array[0],magic_square->side_size);
     for (int i = 1; i < magic_square->side_size; i++){
@@ -217,7 +220,7 @@ void* check_all_lines_equals_seq(void* param){
     pthread_exit(NULL);
 }
 
-void* check_all_columns_equals_seq(void* param){
+void* check_all_columns_equals_threaded(void* param){
     magicSquare *magic_square = (magicSquare *)param;
     long long sum_first_column = sum_column(0,magic_square->array,magic_square->side_size);
     for (int j = 1; j < magic_square->side_size; j++) 
@@ -229,7 +232,7 @@ void* check_all_columns_equals_seq(void* param){
     pthread_exit(NULL);
 }
 
-void* check_all_diags_equals_seq(void* param){
+void* check_all_diags_equals_threaded(void* param){
     magicSquare *magic_square = (magicSquare *)param;
     long long diag_right_left = sum_diag(0,magic_square->side_size-1,magic_square->array,magic_square->side_size);
     long long diag_left_right = sum_diag(0,0,magic_square->array,magic_square->side_size);
@@ -240,10 +243,19 @@ void* check_all_diags_equals_seq(void* param){
     pthread_exit(NULL);
 }
 
-void perfect_square_threaded(const char* file_path){
+void *perfect_square_threaded(const char *filep){
+
+    /**
+     * start counting time 
+     */
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+    //****************//
+    // char *filep = (char *)file_path;
     printf("Threaded\n");
     FILE *fp;
-    fp = fopen(file_path,"r");
+    fp = fopen(filep,"r");
     int size_array = array_size_count(fp); //count size
 
     int sqrN = sqrt(size_array);
@@ -252,7 +264,7 @@ void perfect_square_threaded(const char* file_path){
     for (int i=0; i<sqrN; i++) 
          array[i] = (int *)malloc(sqrN * sizeof(int)); 
 
-    fp = fopen(file_path,"r");
+    fp = fopen(filep,"r");
     
     array_fill(fp,size_array,sqrN,array);
     
@@ -261,16 +273,10 @@ void perfect_square_threaded(const char* file_path){
     pthread_t tid[3];
     int thread_num = 0;
 
-    /**
-     * start counting time 
-     */
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
     // printf("testStruct: %d\n",magic_square.array[86][99]);
-    pthread_create(&tid[thread_num++],NULL,check_all_lines_equals_seq,(void*)&magic_square);
-    pthread_create(&tid[thread_num++],NULL,check_all_columns_equals_seq,(void*)&magic_square);
-    pthread_create(&tid[thread_num++],NULL,check_all_diags_equals_seq,(void *)&magic_square);
+    pthread_create(&tid[thread_num++],NULL,check_all_lines_equals_threaded,(void*)&magic_square);
+    pthread_create(&tid[thread_num++],NULL,check_all_columns_equals_threaded,(void*)&magic_square);
+    pthread_create(&tid[thread_num++],NULL,check_all_diags_equals_threaded,(void *)&magic_square);
     
     for(int i = 0; i < thread_num; i++){
         pthread_join(tid[i],NULL);
@@ -282,7 +288,7 @@ void perfect_square_threaded(const char* file_path){
     printf("Diag Sum: %lld\n",magic_square.diag_sum);
     int rules[3] = {magic_square.lines_sum, magic_square.cols_sum,magic_square.diag_sum};
     
-    int matches=any_equals(rules,3,INT_MIN);
+    int matches=any_equals(rules,3,LLONG_MIN);
     
     if(matches is 3)
         printf("Quadrado magico\n");
@@ -302,6 +308,7 @@ void perfect_square_threaded(const char* file_path){
 
 }
 int main(){
-    perfect_square_sequential("input8.txt");
+    
     perfect_square_threaded("input8.txt");
+    perfect_square_sequential("input8.txt");
 }
