@@ -2,7 +2,12 @@
     "files.associations": {
         "pthread.h": "c",
         "stdlib.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "conio.h": "c",
+        "stdio.h": "c",
+        "stdint.h": "c",
+        "inttypes.h": "c",
+        "corecrt.h": "c"
     },
     "code-runner.executorMap": {
 
