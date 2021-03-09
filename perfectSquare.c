@@ -132,7 +132,7 @@ magicSquareSplit *MagicSquareSplit(magicSquare *data){
         result[i].splitNum = splitNum;
     }
     
-    printf("Thread Count to use: %d\n",splitNum*2);
+    // printf("Thread Count to use: %d\n",splitNum*2);
     return result;
     
 }
@@ -159,7 +159,7 @@ magicSquare fetch_data(const char *filepath) {
 
     llong size_array = data_size_count(fp); //count size
     llong sqrN = sqrtl(size_array);
-    printf("size: %lld, squareRoot: %lld\n",size_array, sqrN);
+    // printf("size: %lld, squareRoot: %lld\n",size_array, sqrN);
     // int **array; bi_dem_array_init((void**)array,sizeof(int),sqrN);
     llong **array = (llong **)malloc(sqrN * sizeof(llong *)); 
     for (int i=0; i<sqrN; i++) 
@@ -236,10 +236,10 @@ void perfect_square_sequential(magicSquare *data){
     /**
      * start counting time 
      */
-    printf("Sequential\n");
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
+    // printf("Sequential\n");
+    // clock_t start, end;
+    // double cpu_time_used;
+    // start = clock();
     //*******************//
     
     //line 1
@@ -262,9 +262,9 @@ void perfect_square_sequential(magicSquare *data){
     /**
      * Stop counting
      */
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Took %lf seconds to execute \n", cpu_time_used); 
+    // end = clock();
+    // cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    // printf("%lf\n", cpu_time_used); 
     //close
 
 }
@@ -338,11 +338,11 @@ void perfect_square_threaded(magicSquareSplit *data_split){
     /**
      * start counting time 
      */
-    printf("Threaded\n");
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
-    start = clock();
+    // printf("Threaded\n");
+    // clock_t start, end;
+    // double cpu_time_used;
+    // start = clock();
+    // start = clock();
     //****************//
     
     magicSquare *data = data_split[0].magic_square;
@@ -372,23 +372,22 @@ void perfect_square_threaded(magicSquareSplit *data_split){
     /**
      * Stop counting
      */
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Took %lf seconds to execute \n", cpu_time_used); 
+    // end = clock();
+    // cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    // printf("Took %lf seconds to execute \n", cpu_time_used); 
 
 }
 
-int main(){
+int main(int argc, char *argv[]){
     clock_t start, end;
     double cpu_time_used;
     start = clock();
     magicSquare data = fetch_data("inputs/input5000x5000.txt");
     magicSquareSplit *data_split = MagicSquareSplit(&data);
+    perfect_square_sequential(&data);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Reading data took %lf seconds to execute \n", cpu_time_used); 
-
-    perfect_square_sequential(&data);
-    perfect_square_threaded(data_split);    
-    return 0;
+    printf("%lf\n\n", cpu_time_used); 
+    // perfect_square_threaded(data_split);    
+    return 0;   
 }
