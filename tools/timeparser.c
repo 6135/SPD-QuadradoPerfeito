@@ -7,7 +7,6 @@
 #include <pthread.h>
 #include <time.h>
 
-
 int main(){
 
     FILE *fpIn = fopen("timeLog.txt","r+");
