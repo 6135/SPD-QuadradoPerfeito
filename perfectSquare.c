@@ -8,7 +8,7 @@
 #include <time.h>
 #include <inttypes.h>
 #include<stdint.h>
-
+#include <windows.h>
 
 
 #define AND &&
@@ -29,12 +29,14 @@
 #define or OR
 #define NOT !
 #define not NOT
+#define True 1
+#define False 0
 
-#define llong long long
+#define llong unsigned long long
 #define MAX_ARRAY_SIDE 100000
 #define THREAD_COUNT 8 //This may be doubled up according to strategy
 
-#include <windows.h>
+int is_valid = 1;
 
 typedef struct {
     llong **array;
@@ -128,7 +130,7 @@ magicSquareSplit *MagicSquareSplit(magicSquare *data){
         result[i].splitNum = splitNum;
     }
     
-    printf("Thread Count to use: %d\n",splitNum*2);
+    // printf("Thread Count to use: %d\n",splitNum*2);
     return result;
     
 }
@@ -150,20 +152,19 @@ void fetch_data_to_array(FILE* fp,const int n,const int sqrN, llong **array){
 }
 
 magicSquare fetch_data(const char *filepath) {
-    
     FILE *fp = fopen(filepath,"r");
-
+    // printf("here");
     llong size_array = data_size_count(fp); //count size
     llong sqrN = sqrtl(size_array);
-    printf("size: %lld, squareRoot: %lld\n",size_array, sqrN);
+    // printf("size: %lld, squareRoot: %lld\n",size_array, sqrN);
     // int **array; bi_dem_array_init((void**)array,sizeof(int),sqrN);
     llong **array = (llong **)malloc(sqrN * sizeof(llong *)); 
     for (int i=0; i<sqrN; i++) 
          array[i] = (llong *)malloc(sqrN * sizeof(llong)); 
-    printf("Size counted\n");
+    // printf("Size counted\n");
     fp = fopen(filepath,"r");    
     fetch_data_to_array(fp,size_array,sqrN,array);
-    printf("Fill Array\n");
+    // printf("Fill Array\n");
 
 
     return MagicSquare(array,size_array);
@@ -232,7 +233,7 @@ void perfect_square_sequential(magicSquare *data){
     /**
      * start counting time 
      */
-    printf("Sequential\n");
+    // printf("Sequential\n");
     clock_t start, end;
     double cpu_time_used;
     start = clock();
@@ -247,20 +248,20 @@ void perfect_square_sequential(magicSquare *data){
     int rules[3] = {check_all_lines, check_all_columns,check_all_diags};
     
     int matches=any_equals(rules,3,LLONG_MIN);
-    printf("Line Sum: %lld\n",check_all_lines);
-    printf("Column Sum: %lld\n",check_all_columns);
-    printf("Diag Sum: %lld\n",check_all_diags);
-    if(matches is 3)
-        printf("Quadrado magico\n");
-    else if(matches is 1)
-        printf("Quadrado magico imperfeito\n");
-    else if(matches is 0) printf("Nao e quadrado magico\n");
+    // printf("Line Sum: %lld\n",check_all_lines);
+    // printf("Column Sum: %lld\n",check_all_columns);
+    // printf("Diag Sum: %lld\n",check_all_diags);
+    // if(matches is 3)
+    //     printf("Quadrado magico\n");
+    // else if(matches is 1)
+    //     printf("Quadrado magico imperfeito\n");
+    // else if(matches is 0) printf("Nao e quadrado magico\n");
     /**
      * Stop counting
      */
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("%lf\n", cpu_time_used); 
+    // printf("%lf\n", cpu_time_used); 
     //close
 
 }
@@ -272,9 +273,10 @@ void* check_all_lines_equals_threaded(void* param){
     llong sum_first_line = sum_line( magic_square->array[magic_square_split->from],magic_square->side_size); // first line of interval
 
     for (int i = magic_square_split->from+1; i < magic_square_split->to; i++){
-        if( (sum_line(magic_square->array[i],magic_square->side_size)) isnot sum_first_line ) {
+        if( (sum_line(magic_square->array[i],magic_square->side_size)) isnot sum_first_line or is_valid is False) {
             magic_square->lines_sum = LLONG_MIN;
             magic_square_split->lines_sum = magic_square->lines_sum;
+            is_valid = False;
             pthread_exit(NULL);
         }
     }
@@ -291,8 +293,9 @@ void* check_all_columns_equals_threaded(void* param){
     llong sum_first_column = sum_column( magic_square_split->from, magic_square->array,magic_square->side_size);
 
     for (int j = magic_square_split->from+1; j < magic_square_split->to; j++) 
-        if(sum_column(j, magic_square->array,magic_square->side_size) isnot sum_first_column ) {
+        if(sum_column(j, magic_square->array,magic_square->side_size) isnot sum_first_column or is_valid is False) {
             magic_square->cols_sum = LLONG_MIN;
+            is_valid = False;
             magic_square_split->cols_sum = magic_square->cols_sum;
             pthread_exit(NULL);
         }
@@ -314,6 +317,8 @@ void* check_all_diags_equals_threaded(void* param){
 }
 
 int check_result_equals(magicSquareSplit *data, llong expection){
+    if(is_valid is False)
+        return 0;
     int split_num = data[0].splitNum;
     llong magic_sum = data[0].lines_sum;
     llong diag_sums = data[0].magic_square->diag_sum;
@@ -334,11 +339,10 @@ void perfect_square_threaded(magicSquareSplit *data_split){
     /**
      * start counting time 
      */
-    printf("Threaded\n");
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
-    start = clock();
+    // printf("Threaded\n");
+    // clock_t start, end;
+    // double cpu_time_used;
+    // start = clock();
     //****************//
     
     magicSquare *data = data_split[0].magic_square;
@@ -355,43 +359,35 @@ void perfect_square_threaded(magicSquareSplit *data_split){
         pthread_join(pthread_id[i],NULL);
     
     switch (check_result_equals(data_split,LLONG_MIN)) {
-    case 2:
-        printf("Quadrado magico\n");
-        break;
-    case 1:
-        printf("Quadrado magico imperfeito\n");
-        break;
-    default:
-        printf("Nao existe quadrado magico\n");
-        break;
+    // case 2:
+    //     printf("Quadrado magico\n");
+    //     break;
+    // case 1:
+    //     printf("Quadrado magico imperfeito\n");
+    //     break;
+    // default:
+    //     printf("Nao existe quadrado magico\n");
+    //     break;
     }
-    /**
-     * Stop counting
-     */
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Took %lf seconds to execute \n", cpu_time_used); 
-
-}
-void test(int *a){
-        printf("%d ",sizeof(a));
 }
 
 int main(int argc, char *argv[]){
-    int a[] = {7,5,12,8,25,7,1,5,8,12,5};
-    printf("%d ",sizeof(a));
-    test(a);
-    // clock_t start, end;
-    // double cpu_time_used;
-    // start = clock();
-    // magicSquare data = fetch_data("inputs/i25000.txt");
-    // magicSquareSplit *data_split = MagicSquareSplit(&data);
-    // // perfect_square_sequential(&data);
-    // perfect_square_threaded(data_split);  
-    // Sleep(10000);
-    // end = clock();
-    // cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    // printf("%lf\n\n", cpu_time_used); 
+    char file_name[100];
+    if(argc > 1){
+        strcpy(file_name,argv[1]);
+    } else {
+        scanf("%s",&file_name);
+    }
+    
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+    magicSquare data = fetch_data(file_name);
+    magicSquareSplit *data_split = MagicSquareSplit(&data);
+    perfect_square_threaded(data_split);
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("%lf\n", cpu_time_used); 
       
     return 0;   
 }
