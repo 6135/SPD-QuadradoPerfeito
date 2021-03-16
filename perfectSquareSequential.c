@@ -266,111 +266,6 @@ void perfect_square_sequential(magicSquare *data){
 
 }
 
-void* check_all_lines_equals_threaded(void* param){
-    magicSquareSplit *magic_square_split = (magicSquareSplit *) param;
-    magicSquare *magic_square = magic_square_split->magic_square;
-
-    llong sum_first_line = sum_line( magic_square->array[magic_square_split->from],magic_square->side_size); // first line of interval
-
-    for (int i = magic_square_split->from+1; i < magic_square_split->to; i++){
-        if( (sum_line(magic_square->array[i],magic_square->side_size)) isnot sum_first_line or is_valid is False) {
-            magic_square->lines_sum = LLONG_MIN;
-            magic_square_split->lines_sum = magic_square->lines_sum;
-            is_valid = False;
-            pthread_exit(NULL);
-        }
-    }
-
-    magic_square_split->lines_sum = sum_first_line;
-    pthread_exit(NULL);
-    return NULL;
-}
-
-void* check_all_columns_equals_threaded(void* param){
-    magicSquareSplit *magic_square_split = (magicSquareSplit *) param;
-    magicSquare *magic_square = magic_square_split->magic_square;
-    
-    llong sum_first_column = sum_column( magic_square_split->from, magic_square->array,magic_square->side_size);
-
-    for (int j = magic_square_split->from+1; j < magic_square_split->to; j++) 
-        if(sum_column(j, magic_square->array,magic_square->side_size) isnot sum_first_column or is_valid is False) {
-            magic_square->cols_sum = LLONG_MIN;
-            is_valid = False;
-            magic_square_split->cols_sum = magic_square->cols_sum;
-            pthread_exit(NULL);
-        }
-    magic_square_split->cols_sum = sum_first_column;
-    pthread_exit(NULL);
-    return NULL;
-}
-
-void* check_all_diags_equals_threaded(void* param){
-    magicSquare *magic_square = (magicSquare *)param;
-    llong diag_right_left = sum_diag(0,magic_square->side_size-1,magic_square->array,magic_square->side_size);
-    llong diag_left_right = sum_diag(0,0,magic_square->array,magic_square->side_size);
-    if(diag_left_right is diag_right_left) {
-        magic_square->diag_sum = diag_left_right;
-    }
-    else  magic_square->diag_sum = LLONG_MIN;
-    //pthread_exit(NULL);
-    return NULL;
-}
-
-int check_result_equals(magicSquareSplit *data, llong expection){
-    if(is_valid is False)
-        return 0;
-    int split_num = data[0].splitNum;
-    llong magic_sum = data[0].lines_sum;
-    llong diag_sums = data[0].magic_square->diag_sum;
-    if(magic_sum is expection)
-        return 0;
-    for(size_t i = 0; i < split_num; i++){
-        if(data[i].lines_sum isnot magic_sum OR data[i].cols_sum isnot magic_sum)
-            return 0;
-    }
-    if(diag_sums is magic_sum)
-        return 2;
-    else return 1;
-}
-
-void perfect_square_threaded(magicSquareSplit *data_split){
-
-
-    /**
-     * start counting time 
-     */
-    // printf("Threaded\n");
-    // clock_t start, end;
-    // double cpu_time_used;
-    // start = clock();
-    //****************//
-    
-    magicSquare *data = data_split[0].magic_square;
-    
-    int split_num = data_split[0].splitNum;
-    pthread_t pthread_id[THREAD_COUNT*2]; //two threads for each interval, one for lines one for cols
-    size_t threadNum = 0;
-    for (size_t i = 0; i < split_num; i++) {
-        pthread_create(&pthread_id[threadNum++],NULL,check_all_lines_equals_threaded,&data_split[i]);
-        pthread_create(&pthread_id[threadNum++],NULL,check_all_columns_equals_threaded,&data_split[i]);
-    }
-    check_all_diags_equals_threaded(data); //since parent thread needs to wait for other threads to finish working, it might aswell do the simple work meanwhile
-    for(size_t i = 0; i < threadNum; i++)
-        pthread_join(pthread_id[i],NULL);
-    // printf("%lld\n",data_split[0].cols_sum);
-    switch (check_result_equals(data_split,LLONG_MIN)) {
-    // case 2:
-    //     printf("Quadrado magico\n");
-    //     break;
-    // case 1:
-    //     printf("Quadrado magico imperfeito\n");
-    //     break;
-    // default:
-    //     printf("Nao existe quadrado magico\n");
-    //     break;
-    }
-}
-
 int main(int argc, char *argv[]){
     char file_name[100];
     if(argc > 1){
@@ -383,8 +278,7 @@ int main(int argc, char *argv[]){
     double cpu_time_used;
     start = clock();
     magicSquare data = fetch_data(file_name);
-    magicSquareSplit *data_split = MagicSquareSplit(&data);
-    perfect_square_threaded(data_split);
+    perfect_square_sequential(&data);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     int time_int = (int)cpu_time_used;
