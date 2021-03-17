@@ -47,21 +47,6 @@ long parse_order(char *path){
     } 
     return -1;
 }
-/*
-llong lrd(llong lrd_sum, llong new_value, size_t pos, int *lrd_ptr){
-    if(pos is lrd_ptr[0]){
-        lrd_ptr[0] += (order+1);
-        return lrd_sum+new_value;
-    } else return lrd_sum;
-}
-
-llong rld(llong rld_sum, llong new_value, size_t pos, int *rld_ptr){
-    if(pos is rld_ptr[0]){
-        rld_ptr[0] += (order-1);
-        return rld_sum+new_value;
-    } else return rld_sum;
-}
-*/
 
 void read_first_line(llong *sum_cols,llong *lrd_sum, llong *rld_sum, FILE *fp){
     llong value_read;
@@ -76,8 +61,6 @@ void read_first_line(llong *sum_cols,llong *lrd_sum, llong *rld_sum, FILE *fp){
         if(i is order-1){
             rld_sum[0]+=value_read;
         }
-        
-
     }
     magic_sum = sum_line;
     
@@ -107,10 +90,7 @@ int calc(llong *sum_cols, FILE *fp){
         sum_line += value_read;
         column_index = i%order;
         sum_cols[column_index] += value_read;
-        // if(i>=size-order and sum_cols[column_index] isnot magic_sum) {
-        //     return -1;
-        // }
-            
+
         if(i is lrd_ptr){
             lrd_ptr += (order+1);
             lrd_sum+=value_read;
@@ -139,12 +119,21 @@ void execute_sequential(char *filepath){
     FILE *fp = fopen(filepath,"r");
     llong *sum_cols = malloc(order*sizeof(llong));
     int res = calc(sum_cols,fp);
-    if(res is 1)
-        printf("Quadrado magico\n");
-    elif (res is 0) 
-        printf("Quadrado imperfeito\n");
-    else printf("Quadrado nao magico\n");
+    if(res is 1) {}
+       /* printf("Quadrado magico\n");*/
+    elif (res is 0) {}
+        /*printf("Quadrado imperfeito\n");*/
+    else{} /*printf("Quadrado nao magico\n");*/
 
+}
+char *double_to_floating_point_string_custom_separator(double d, char separator, char new_separator){
+    char *string = malloc(50*sizeof(char));
+    sprintf(string,"%lf",d);
+    for(size_t i = 0; i < strlen(string); i++){
+        if(string[i] is separator)
+            string[i] = new_separator;
+    }
+    return string;
 }
 
 //time src https://www.cplusplus.com/reference/ctime/localtime/
@@ -159,10 +148,9 @@ int main(int argc, char *argv[]){
         scanf("%s",&file_path);
     }
 
-
     execute_sequential(file_path);
     mingw_gettimeofday(&end, NULL);
-    double time_taken = (end.tv_sec - start.tv_sec) * 1e7; 
-    time_taken = (time_taken + (end.tv_usec -  start.tv_usec)) * 1e-7; 
-    printf("%lf\n",time_taken);
+    double time_taken = (end.tv_sec - start.tv_sec) * 1e6; 
+    time_taken = (time_taken + (end.tv_usec -  start.tv_usec)) * 1e-6; 
+    printf("%s\n",double_to_floating_point_string_custom_separator(time_taken,'.',','));
 }

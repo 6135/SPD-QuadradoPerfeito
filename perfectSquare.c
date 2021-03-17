@@ -383,8 +383,8 @@ int main(int argc, char *argv[]){
     double cpu_time_used;
     start = clock();
     magicSquare data = fetch_data(file_name);
-    magicSquareSplit *data_split = MagicSquareSplit(&data);
-    perfect_square_threaded(data_split);
+    // magicSquareSplit *data_split = MagicSquareSplit(&data);
+    perfect_square_sequential(&data);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     int time_int = (int)cpu_time_used;
