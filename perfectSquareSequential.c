@@ -2,13 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <stdbool.h>
 #include <limits.h>
-#include <pthread.h>
-#include <time.h> 
-#include <inttypes.h>
-#include <stdint.h>
-#include <windows.h>
+#include <ctype.h>
 
 #define AND &&
 #define and AND
@@ -39,12 +34,14 @@ long order;
 
 
 long parse_order(char *path){
-    char *ptr = path; 
-    while (*ptr) { 
-        if (isdigit(*ptr)) 
-            return strtol(ptr, &ptr, 10); 
-        else ptr++; 
-    } 
+    size_t path_size = strlen(path)-4;//i.e lets work backwards 
+    size_t digits_size=0;
+    for(size_t i = path_size-1; i >= 0; i--){
+        char c = path[i];
+        if(isdigit(c))
+            digits_size++;
+        else return strtol(path+(path_size-digits_size),&path,10);
+    }
     return -1;
 }
 
@@ -115,17 +112,17 @@ int calc(llong *sum_cols, FILE *fp){
 
 void execute_sequential(char *filepath){
     order = parse_order(filepath);
-    // printf("magicSum: %lld\n",magic_sum);
     FILE *fp = fopen(filepath,"r");
     llong *sum_cols = malloc(order*sizeof(llong));
     int res = calc(sum_cols,fp);
-    if(res is 1) {}
-       /* printf("Quadrado magico\n");*/
-    elif (res is 0) {}
-        /*printf("Quadrado imperfeito\n");*/
-    else{} /*printf("Quadrado nao magico\n");*/
+    if(res is 1) 
+       printf("Quadrado magico\n");
+    elif (res is 0) 
+        printf("Quadrado imperfeito\n");
+    else printf("Quadrado nao magico\n");
 
 }
+
 char *double_to_floating_point_string_custom_separator(double d, char separator, char new_separator){
     char *string = malloc(50*sizeof(char));
     sprintf(string,"%lf",d);
@@ -138,19 +135,12 @@ char *double_to_floating_point_string_custom_separator(double d, char separator,
 
 //time src https://www.cplusplus.com/reference/ctime/localtime/
 int main(int argc, char *argv[]){
-    struct timeval start, end; 
-    mingw_gettimeofday(&start, NULL); 
-
     char file_path[300];
     if(argc > 1){
         strcpy(file_path,argv[1]);
     } else {
+        printf("Nao introduzio argumento, indique o caminho da input: ");
         scanf("%s",&file_path);
     }
-
     execute_sequential(file_path);
-    mingw_gettimeofday(&end, NULL);
-    double time_taken = (end.tv_sec - start.tv_sec) * 1e6; 
-    time_taken = (time_taken + (end.tv_usec -  start.tv_usec)) * 1e-6; 
-    printf("%s\n",double_to_floating_point_string_custom_separator(time_taken,'.',','));
 }
