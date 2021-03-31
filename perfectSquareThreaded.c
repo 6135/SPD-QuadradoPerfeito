@@ -30,7 +30,7 @@
 #define elif else if
 #define llong long long
 #define ullong unsigned long long
-#define THREAD_NUM 8
+#define THREAD_NUM 16
 
 short square_type = 1;  //1 means perfect, 0 means imperfect -1 means no magic square
 ullong *sum_cols;
