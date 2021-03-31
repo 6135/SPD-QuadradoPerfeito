@@ -4,13 +4,13 @@
         "string.h": "c",
         "math.h": "c",
         "stdint.h": "c",
-        "windows.h": "c",
         "pthread.h": "c",
         "stdbool.h": "c",
         "stdlib.h": "c",
         "stdio.h": "c",
         "limits.h": "c",
         "vcruntime.h": "c",
-        "inttypes.h": "c"
+        "inttypes.h": "c",
+        "omp.h": "c"
     }
 }
