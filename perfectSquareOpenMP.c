@@ -31,14 +31,15 @@
 #define elif else if
 #define llong long long
 #define ullong unsigned long long
-
+#define THREAD_SKIP -6135
 
 short is_magic_quare = True;  //1 means perfect, 0 means imperfect -1 means no magic square
 ullong *sum_cols;
 ullong *data;
 ullong rld_sum=0, lrd_sum=0;
 ullong order = 0;
-const int OMP_NUM_THREADS = 4;
+
+const int OMP_NUM_THREADS = 8;
 
 typedef struct {
 
@@ -133,11 +134,22 @@ int calc(FILE *fp){
                         sum_cols[column]+=value;
                     }
                 }
-                
+                msq[i].value = constant;
             }
         }
+
+    ullong constant = sum_cols[0];
+    for (size_t i = 0; i < THREAD_NUM; i++) {
+        // printf("msq[%d].value: %lld sum_cols[%d]: %lld\n",i,msq[i].value,i,sum_cols[i]);
+        if(msq[i].value isnot constant or sum_cols[i] isnot constant)
+            return -1;
+        
+    }
+
+    return (1*(rld_sum is lrd_sum and rld_sum is constant)) + 0;
     
 }
+
 
 void execute_threaded(char *filepath){
     order = parse_order(filepath);
@@ -147,13 +159,13 @@ void execute_threaded(char *filepath){
     switch (res)
     {
     case 1:
-        printf("Quadrado magico\n");
+        // printf("Quadrado magico\n");
         break;
     case 0:
-        printf("Quadrado imperfeito\n");
+        // printf("Quadrado imperfeito\n");
         break;
     default:
-        printf("Quadrado nao magico\n");
+        // printf("Quadrado nao magico\n");
         break;
     }
 
@@ -169,7 +181,6 @@ char *double_to_floating_point_string_custom_separator(double d, char separator,
     return string;
 }
 
-//time src https://www.cplusplus.com/reference/ctime/localtime/
 int main(int argc, char *argv[]){
     char file_path[256];
     if(argc > 1){
