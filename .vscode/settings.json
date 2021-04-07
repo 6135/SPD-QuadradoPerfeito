@@ -11,6 +11,7 @@
         "limits.h": "c",
         "vcruntime.h": "c",
         "inttypes.h": "c",
-        "omp.h": "c"
+        "omp.h": "c",
+        "mpi.h": "c"
     }
 }

@@ -10,7 +10,8 @@
 				"${file}",
 				"-o",
 				"${fileDirname}\\${fileBasenameNoExtension}.exe",
-				"-fopenmp"
+				// "-I${MSMPI_INC}\\x64",
+				// "-I${MSMPI_INC}"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
