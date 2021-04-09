@@ -33,7 +33,7 @@
 #define ullong unsigned long long
 #define MPI_ULLONG MPI_UNSIGNED_LONG_LONG
 #define GREATER(X,Y) X*(X>=Y)+Y*(X<Y)
-#define THREAD_SKIP -6135
+#define PROCC_SKIP -6135
 #define structlen 6
 
 // short is_magic_quare = True;  //1 means perfect, 0 means imperfect -1 means no magic square
@@ -107,16 +107,16 @@ void long_readfile_until(FILE *f, ullong *a, ullong size)
 void operate(ullong *sum_cols, ullong *data, MagicSquare *msq){
     ullong sum_line = 0,value = 0, constant = 0, column, row;
     for (size_t i = msq->start; i < msq->size+msq->start; i++) {
-        if(msq->value isnot THREAD_SKIP) {
+        if(msq->value isnot PROCC_SKIP) {
             value = data[i-msq->start];
             row = i/msq->order;
             column = i%msq->order;
             sum_line+=value;
             if(row is msq->start/msq->order and column is msq->order-1) constant = sum_line;
             if(sum_line is constant and column is msq->order-1) sum_line = 0;
-            else if (column is msq->order-1) {msq->value = THREAD_SKIP; break; }
-            if(row is column) msq->lrd_sum += value;
-            if(column is (msq->order-1-row)) msq->rld_sum += value;
+            else if (column is msq->order-1) {msq->value = PROCC_SKIP; break; }
+            msq->lrd_sum += value*(row is column);
+            msq->rld_sum += value*(column is (msq->order-1-row));
             sum_cols[column]+=value;
         }
     }
@@ -175,14 +175,12 @@ int masterMachine(FILE *fp){
     ullong rld_sum = msq[0].rld_sum + msq[1].rld_sum;
     ullong lrd_sum = msq[0].lrd_sum + msq[1].lrd_sum;
 
-    ullong lines = msq[0].value*(msq[0].value is msq[1].value) + THREAD_SKIP*(msq[0].value isnot msq[1].value);
+    ullong lines = msq[0].value*(msq[0].value is msq[1].value) + PROCC_SKIP*(msq[0].value isnot msq[1].value);
     ullong columns = column_sum_check(sum_cols_local,order);
 
     return 1*(lines is columns and rld_sum is lrd_sum and rld_sum is lines) +
            1*(lines is columns) +
            0;
-
-
 
 }
 
