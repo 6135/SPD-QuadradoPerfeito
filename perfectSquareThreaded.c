@@ -110,7 +110,6 @@ void *thread_fuction(void *args){
                 pthread_exit(NULL);
             }
         }
-
     }
     free(msq->linesData);
     msq->value = constant;
@@ -137,17 +136,11 @@ int calc(FILE *fp){
     for(size_t i = 0; i < order; i++){
         
         if( (((i+1)%(line_per_thread) is 0 and i isnot 0) or i is order-1 )and square_type != -1){
-            // printf("%lld %d inst thread start: %d\n",i,line_per_thread,start);
             long_readfile(fp,linesData,line_per_thread*order);
-            // printf("done reading\n");
             size = ((i+1)-(line_per_thread*struct_index))*order;
-            // printf("struct_index: %d\n",struct_index);
             msq[struct_index] = magicSquare(linesData,size,start);
-            
             pthread_create(&thread_id[thread_count++],NULL,thread_fuction,&msq[struct_index++]);
-            // pthread_join(thread_id[thread_count-1],NULL);
             start=(i+1)*order;
-
         }
 
     }

@@ -11,6 +11,7 @@ def p(n):
 	if not is_odd(n):
 		print("Since n is not odd, this program will generate n+1 perfect magic square")
 		n+=1
+	
 	magicSquare = [[0 for x in range(n)]
 				for y in range(n)]
 
@@ -18,8 +19,7 @@ def p(n):
 	i = n / 2
 	j = n - 1
 
-	# Fill the magic square
-	# by placing values
+	# Fill the magic square by placing values
 	num = 1
 	while num <= (n * n):
 		if i == -1 and j == n:  # 3rd condition
@@ -27,13 +27,11 @@ def p(n):
 			i = 0
 		else:
 
-			# next number goes out of
-			# right side of square
+			# next number goes out of right side of square
 			if j == n:
 				j = 0
 
-			# next number goes
-			# out of upper side
+			# next number goes out of upper side
 			if i < 0:
 				i = n - 1
 
@@ -51,7 +49,7 @@ def p(n):
 	# Printing magic square
 	File_object = open(r"inputs/p"+str(n)+".txt","w+")
 	for i in range(0, n):
-		print("PLine: "+ str(i))
+		# print("PLine: "+ str(i))
 		for j in range(0, n):            
 			if j != 0:
 				File_object.write(" ")
@@ -63,7 +61,7 @@ def i(size):
 	File_object = open(r"inputs/i"+str(size)+".txt","w+")
 	for start_num in range(size):
 		next_num = start_num+1
-		print("ILine: "+ str(start_num))
+		# print("ILine: "+ str(start_num))
 		for y in range(size):
 			if next_num > size:
 				next_num = 1
@@ -76,7 +74,7 @@ def i(size):
 def r(size):
 	File_object = open(r"inputs/r"+str(size)+".txt","w+")
 	for start_num in range(size):
-		print("RLine: "+ str(start_num))
+		# print("RLine: "+ str(start_num))
 		for y in range(size):
 			next_num = random.randint(1,size)
 			if y != 0:
@@ -85,24 +83,35 @@ def r(size):
 			next_num+=1
 		File_object.write(' ')
 
-def main():
-	size = int(input("Choose size, beware 10k+ will take a while: "))
-	if size <= 2:
-		print("Value must be > 2")
-		exit()
-	iThread = threading.Thread(target=i,args=(size,))
-	rThread = threading.Thread(target=r,args=(size,))
-	iThread.start()
-	rThread.start()
-	
-	iThread.join()
-	rThread.join()
-	p(size)
+def my_range(start, end, step):
+    while start <= end:
+        yield start
+        start += step
 
-	if not is_odd(size):
-		size_p = size+1
-	else: size_p = size
-	print("Created three files i"+str(size)+".txt and r"+str(size)+".txt and a file p" + str(size_p)+".txt")
+def main():
+	start = int(input("Choose start size: "))
+	step = int(input("Choose step size: "))
+	end = int(input("Choose end size: "))
+
+	for x in my_range(start,end,step):
+
+		if x <= 2:
+			print("Value must be > 2")
+			exit()
+		iThread = threading.Thread(target=i,args=(x,))
+		rThread = threading.Thread(target=r,args=(x,))
+		iThread.start()
+		rThread.start()
+		
+		iThread.join()
+		rThread.join()
+		
+		p(x)
+
+		if not is_odd(x):
+			x_p = x+1
+		else: x_p = x
+		print("Created three files i"+str(x)+".txt and r"+str(x)+".txt and a file p" + str(x_p)+".txt")
 
 if __name__ == "__main__":
 	main()

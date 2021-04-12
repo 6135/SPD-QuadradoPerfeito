@@ -159,13 +159,13 @@ void execute_threaded(char *filepath){
     switch (res)
     {
     case 1:
-        // printf("Quadrado magico\n");
+        printf("Quadrado magico\n");
         break;
     case 0:
-        // printf("Quadrado imperfeito\n");
+        printf("Quadrado imperfeito\n");
         break;
     default:
-        // printf("Quadrado nao magico\n");
+        printf("Quadrado nao magico\n");
         break;
     }
 

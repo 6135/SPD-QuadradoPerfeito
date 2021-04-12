@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <mpi.h>
 #include <unistd.h>
+#include <omp.h>    
 #define AND &&
 #define and AND
 #define ISNOT !=
@@ -33,10 +34,11 @@
 #define ullong unsigned long long
 #define MPI_ULLONG MPI_UNSIGNED_LONG_LONG
 #define GREATER(X,Y) X*(X>=Y)+Y*(X<Y)
+
 #define PROCC_SKIP -6135
 #define structlen 6
-
-// short is_magic_quare = True;  //1 means perfect, 0 means imperfect -1 means no magic square
+int OMP_NUM_THREADS = 1;
+short is_magic_quare = True;  //1 means perfect, 0 means imperfect -1 means no magic square
 // ullong *sum_cols;
 // ullong rld_sum=0, lrd_sum=0;
 // ullong order = 0;
@@ -103,34 +105,94 @@ void long_readfile_until(FILE *f, ullong *a, ullong size)
         fscanf(f, "%lld", &a[i]);
     
 }
-
-void operate(ullong *sum_cols, ullong *data, MagicSquare *msq){
-    ullong sum_line = 0,value = 0, constant = 0, column, row;
-    for (size_t i = msq->start; i < msq->size+msq->start; i++) {
-        if(msq->value isnot PROCC_SKIP) {
-            value = data[i-msq->start];
-            row = i/msq->order;
-            column = i%msq->order;
-            sum_line+=value;
-            if(row is msq->start/msq->order and column is msq->order-1) constant = sum_line;
-            if(sum_line is constant and column is msq->order-1) sum_line = 0;
-            else if (column is msq->order-1) {msq->value = PROCC_SKIP; break; }
-            msq->lrd_sum += value*(row is column);
-            msq->rld_sum += value*(column is (msq->order-1-row));
-            sum_cols[column]+=value;
-        }
-    }
-    msq->value = constant;
-    
-}
-
 ullong column_sum_check(ullong *sum_columns, int size){
     ullong col_sum = sum_columns[0];
-    for (size_t i = 1; i < size; i++)
+    for (size_t i = 1; i < size; i++) {
+        // printf("cols: %lld\n",sum_columns[i]);
         col_sum += -col_sum*(sum_columns[i] isnot col_sum);
+    }
     
     return col_sum;
 }
+ullong values_check(MagicSquare *msq, int count){
+    ullong value = msq[0].value;
+    for (int i = 0; i < count; i++)
+        value += -value*(msq[i].value isnot value);
+        
+    return value;
+    
+}
+
+ullong lrd_check(MagicSquare *msq, int count){
+
+}
+
+void operate(ullong *sum_cols, ullong *data, MagicSquare *msq){
+    order = msq->order;
+    ullong small_order = (msq->size)/msq->order;
+    // printf("small order: %lld\n",small_order);
+    int interval= floor( (double)small_order /OMP_NUM_THREADS);
+    int THREAD_NUM = OMP_NUM_THREADS;
+    if(small_order < OMP_NUM_THREADS) {
+        THREAD_NUM = small_order;
+        omp_set_num_threads(small_order);
+    } else { 
+        omp_set_num_threads(OMP_NUM_THREADS);
+    }
+
+    MagicSquare *msq_omp = malloc(THREAD_NUM*sizeof(MagicSquare));
+    int lines_in_thread = interval;
+    long start=0, size=lines_in_thread*msq->order;
+    for (size_t i = 0; i < THREAD_NUM; i++) {
+        if(i is THREAD_NUM-1) {
+            lines_in_thread = small_order-(lines_in_thread*i);
+            size = lines_in_thread*msq->order;
+        }
+        // printf("msq_omp[%d]: size: %lld start %lld\n",i,size,start);
+        msq_omp[i] = magicSquare(size,start);
+        start += size;
+    }
+
+    ullong lrd_sum, rld_sum; 
+    //private
+    ullong value;
+    int row, column, row_offset = msq->start/msq->order;
+
+
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    #pragma omp parallel for shared(lrd_sum,rld_sum,msq_omp,msq,sum_cols) private(row,column)
+        for (size_t i = 0; i < THREAD_NUM; i++) {
+            if(is_magic_quare is True){
+                MagicSquare *ms = &msq_omp[i];
+                ullong sum_line = 0,value = 0, constant = 0;
+                for (size_t j = ms->start; j < ms->size+ms->start; j++) {
+                    
+                    if(is_magic_quare is True) {
+                        value = data[j];
+                        row = j/msq->order;
+                        column = j%msq->order;
+                        sum_line+=value;
+                        if(row is ms->start/msq->order and column is msq->order-1) constant = sum_line;
+                        if(sum_line is constant and column is msq->order-1) sum_line = 0;
+                        else if (column is msq->order-1) { is_magic_quare = False; constant = PROCC_SKIP;}
+                        if((row+row_offset) is column) msq->lrd_sum += value;
+                        if(column is (msq->order-1-(row+row_offset))) msq->rld_sum += value;
+                        sum_cols[column]+=value;
+                    }
+                    
+                }
+                
+                ms->value = constant;
+            }
+        }
+
+    ullong result = values_check(msq_omp,THREAD_NUM);
+    msq->value = result*(result gt 0) + PROCC_SKIP*(result is 0);
+}
+
+
 
 int masterMachine(FILE *fp){
     int world_size;
@@ -154,7 +216,6 @@ int masterMachine(FILE *fp){
     }
 
     ullong *data = malloc( GREATER(msq[0].size,msq[1].size) *sizeof(ullong)) ;
-    printf("Sending first data to slave\n");
     MPI_Send(&msq[0],1,MPI_MAGICSQUARE,1,0,MPI_COMM_WORLD);
     long_readfile_until(fp,data,msq[0].size);
     MPI_Send(data,msq[0].size,MPI_ULLONG,1,1,MPI_COMM_WORLD);
@@ -163,8 +224,8 @@ int masterMachine(FILE *fp){
     ullong *sum_cols_local = calloc(sizeof(ullong),order);
     operate(sum_cols_local,data,&msq[1]);
     free(data);
+
     /* gather data from slave */
-    printf("Waiting for slave to answer\n");
     MPI_Recv(&msq[0],1,MPI_MAGICSQUARE,1,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     ullong *sum_cols_slave = calloc(sizeof(ullong),order);
     MPI_Recv(sum_cols_slave,order,MPI_ULLONG,1,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -173,11 +234,11 @@ int masterMachine(FILE *fp){
     for (size_t i = 0; i < order; i++)
         sum_cols_local[i]+=sum_cols_slave[i];
     
-
     ullong rld_sum = msq[0].rld_sum + msq[1].rld_sum;
     ullong lrd_sum = msq[0].lrd_sum + msq[1].lrd_sum;
 
     ullong lines = msq[0].value*(msq[0].value is msq[1].value) + PROCC_SKIP*(msq[0].value isnot msq[1].value);
+    
     ullong columns = column_sum_check(sum_cols_local,order);
 
     return 1*(lines is columns and rld_sum is lrd_sum and rld_sum is lines) +
