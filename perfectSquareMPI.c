@@ -202,7 +202,6 @@ int slaveMachine() {
 
 void execute_MPI(char *filepath){
     order = parse_order(filepath);
-    FILE *fp = fopen(filepath,"r");
     // Get the rank of the process
     int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
