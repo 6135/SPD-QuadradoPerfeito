@@ -238,6 +238,7 @@ char *double_to_floating_point_string_custom_separator(double d, char separator,
 }
 
 int main(int argc, char *argv[]){
+    MPI_Init(NULL, NULL);
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
@@ -249,7 +250,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    MPI_Init(NULL, NULL);
+    
 
     init_struct_type_magicsquare();
     execute_MPI(file_path);
