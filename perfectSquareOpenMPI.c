@@ -299,6 +299,7 @@ char *double_to_floating_point_string_custom_separator(double d, char separator,
 }
 
 int main(int argc, char *argv[]){
+
     char file_path[256];
     if(argc > 1){
         strcpy(file_path,argv[1]);

@@ -238,11 +238,14 @@ char *double_to_floating_point_string_custom_separator(double d, char separator,
 }
 
 int main(int argc, char *argv[]){
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
     char file_path[256];
     if(argc > 1){
         strcpy(file_path,argv[1]);
     } else {
-        printf("Nao introduzio argumento, indique o caminho da input");
+        printf("%s Nao foi introduzido o argumento, indique o caminho da input\n",processor_name);
         return 1;
     }
 
