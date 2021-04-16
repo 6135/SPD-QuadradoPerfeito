@@ -1,0 +1,29 @@
+Quadrado magico
+
+real	0m0.720s
+user	0m0.047s
+sys	0m0.047s
+
+real	0m0.719s
+user	0m0.000s
+sys	0m0.094s
+
+real	0m0.742s
+user	0m0.031s
+sys	0m0.141s
+
+real	0m0.721s
+user	0m0.047s
+sys	0m0.109s
+
+real	0m0.728s
+user	0m0.000s
+sys	0m0.094s
+
+real	0m0.724s
+user	0m0.031s
+sys	0m0.078s
+
+real	0m0.733s
+user	0m0.031s
+sys	0m0.078s

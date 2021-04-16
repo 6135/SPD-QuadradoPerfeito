@@ -103,7 +103,7 @@ void *thread_fuction(void *args){
             // printf("line end\n");
             if(sum_line is constant) { sum_line = 0;}
             else { 
-                // printf("exit\n");
+                // printf("exit %lld\n",constant);
                 square_type = -1; 
                 msq->value = LLONG_MIN;
                 free(msq->linesData);
@@ -144,7 +144,6 @@ int calc(FILE *fp){
         }
 
     }
-    
     for (size_t i = 0; i < struct_index; i++){
         // printf("waiting for... %d\n",thread_id[i]);
         pthread_join(thread_id[i],NULL);

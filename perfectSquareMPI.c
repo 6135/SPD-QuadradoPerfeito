@@ -154,7 +154,6 @@ int masterMachine(FILE *fp){
     }
 
     ullong *data = malloc( GREATER(msq[0].size,msq[1].size) *sizeof(ullong)) ;
-    printf("Sending first data to slave\n");
     MPI_Send(&msq[0],1,MPI_MAGICSQUARE,1,0,MPI_COMM_WORLD);
     long_readfile_until(fp,data,msq[0].size);
     MPI_Send(data,msq[0].size,MPI_ULLONG,1,1,MPI_COMM_WORLD);
@@ -164,7 +163,6 @@ int masterMachine(FILE *fp){
     operate(sum_cols_local,data,&msq[1]);
     free(data);
     /* gather data from slave */
-    printf("Waiting for slave to answer\n");
     MPI_Recv(&msq[0],1,MPI_MAGICSQUARE,1,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     ullong *sum_cols_slave = calloc(sizeof(ullong),order);
     MPI_Recv(sum_cols_slave,order,MPI_ULLONG,1,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
