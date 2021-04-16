@@ -54,3 +54,5 @@ inputs/*
 inputs\*
 inputs/
 inputs\
+*.out
+*.exe
